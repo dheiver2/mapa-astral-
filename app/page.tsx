@@ -1,8 +1,8 @@
 // app/page.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, MapPin } from 'lucide-react';
 
 interface BirthData {
   birthDate: string;
@@ -17,11 +17,10 @@ interface ChartData {
     symbol: string;
     sign: string;
     position: number;
-    color: string; // Melhoria 1: Adicionado cores para planetas
+    color: string;
   }[];
 }
 
-// Melhoria 2: Mensagens de validação
 const validateForm = (data: BirthData) => {
   const errors = [];
   if (!data.birthDate) errors.push('Data de nascimento é obrigatória');
@@ -39,11 +38,60 @@ export default function Home() {
     longitude: ''
   });
   const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [loading, setLoading] = useState(false); // Melhoria 3: Estado de loading
-  const [errors, setErrors] = useState<string[]>([]); // Melhoria 4: Estado de erros
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string>('');
+
+  // Função para obter localização
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoError('Geolocalização não é suportada pelo seu navegador');
+      return;
+    }
+
+    setGeoLoading(true);
+    setGeoError('');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData(prev => ({
+          ...prev,
+          latitude: position.coords.latitude.toFixed(6),
+          longitude: position.coords.longitude.toFixed(6)
+        }));
+        setGeoLoading(false);
+      },
+      (error) => {
+        let errorMessage = 'Erro ao obter localização';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permissão para geolocalização negada';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Localização indisponível';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Tempo esgotado ao obter localização';
+            break;
+        }
+        setGeoError(errorMessage);
+        setGeoLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Tentar obter localização automaticamente ao montar o componente
+  useEffect(() => {
+    getLocation();
+  }, []);
 
   const handleSubmit = async () => {
-    // Melhoria 5: Validação antes de enviar
     const validationErrors = validateForm(formData);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
@@ -75,7 +123,6 @@ export default function Home() {
     }
   };
 
-  // Melhoria 6: Função de limpar formulário
   const handleClear = () => {
     setFormData({
       birthDate: '',
@@ -89,7 +136,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Melhoria 7: Header melhorado */}
       <header className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8 mb-8">
         <div className="max-w-2xl mx-auto px-4">
           <h1 className="text-3xl font-bold text-center">Mapa Astral</h1>
@@ -100,7 +146,6 @@ export default function Home() {
       </header>
 
       <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-6">
-        {/* Melhoria 8: Mensagens de erro melhoradas */}
         {errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
             {errors.map((error, index) => (
@@ -110,7 +155,6 @@ export default function Home() {
         )}
         
         <div className="grid gap-6">
-          {/* Melhoria 9: Labels e organização melhorada dos campos */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Data de Nascimento
@@ -134,34 +178,59 @@ export default function Home() {
               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Latitude
-            </label>
-            <input
-              type="number"
-              value={formData.latitude}
-              onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Ex: -23.5505"
-              step="0.000001"
-            />
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Latitude
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={formData.latitude}
+                  onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+                  className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Ex: -23.5505"
+                  step="0.000001"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Longitude
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={formData.longitude}
+                  onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+                  className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Ex: -46.6333"
+                  step="0.000001"
+                />
+              </div>
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Longitude
-            </label>
-            <input
-              type="number"
-              value={formData.longitude}
-              onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Ex: -46.6333"
-              step="0.000001"
-            />
-          </div>
+
+          {/* Botão de Geolocalização */}
+          <button
+            onClick={getLocation}
+            disabled={geoLoading}
+            className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-purple-500 text-purple-600 rounded hover:bg-purple-50 transition-colors"
+          >
+            {geoLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <MapPin className="w-5 h-5" />
+            )}
+            {geoLoading ? 'Obtendo localização...' : 'Usar localização atual'}
+          </button>
+
+          {/* Mensagem de erro da geolocalização */}
+          {geoError && (
+            <p className="text-sm text-red-600">{geoError}</p>
+          )}
 
           <div className="flex gap-4">
             <button
@@ -184,7 +253,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Melhoria 10: Card de resultados melhorado */}
         {chartData && (
           <div className="mt-8 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-lg p-6">
             <h2 className="text-xl font-bold mb-4 text-purple-900">
