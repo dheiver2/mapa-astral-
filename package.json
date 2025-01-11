@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@xenova/transformers": "^2.5.0", // Biblioteca para usar modelos de LLM
     "next": "14.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
