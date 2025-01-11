@@ -23,6 +23,7 @@
     "@types/react": "^18.2.0",
     "@types/node": "^20.0.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.1.0"
+    "eslint-config-next": "^14.1.0",
+    "node-loader": "^2.0.0" // Adicionado aqui
   }
 }
