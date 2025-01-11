@@ -22,7 +22,7 @@ export const interpretPlanet = async (
     // Verificar a estrutura do output e acessar a propriedade correta
     if (Array.isArray(output) && output.length > 0) {
       const firstOutput = output[0];
-      if (typeof firstOutput === 'object' && firstOutput.generated_text) {
+      if (typeof firstOutput === 'object' && 'generated_text' in firstOutput) {
         return firstOutput.generated_text;
       }
     }
