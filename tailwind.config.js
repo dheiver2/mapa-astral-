@@ -1,12 +1,12 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    './app/**/*.{js,ts,jsx,tsx}', // Caminho para seus arquivos React
+    './pages/**/*.{js,ts,jsx,tsx}', // Caminho para suas páginas
+    './components/**/*.{js,ts,jsx,tsx}', // Caminho para seus componentes
   ],
   theme: {
     extend: {},
   },
   plugins: [],
-}
+};
