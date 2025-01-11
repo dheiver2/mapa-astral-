@@ -9,19 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@xenova/transformers": "^2.5.0", // Biblioteca para modelos de linguagem
-    "lucide-react": "^0.264.0", // Ícones
-    "next": "^14.1.0", // Framework Next.js
-    "react": "^18.2.0", // Biblioteca React
-    "react-dom": "^18.2.0", // Renderização do React no navegador
-    "sharp": "^0.33.0" // Otimização de imagens (opcional, mas recomendado)
+    "@xenova/transformers": "^2.5.0",
+    "lucide-react": "^0.264.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "node-loader": "^2.0.0", // Loader para arquivos .node
-    "typescript": "^5.3.0", // TypeScript
-    "@types/react": "^18.2.0", // Tipos para React
-    "@types/node": "^20.0.0", // Tipos para Node.js
-    "eslint": "^8.57.0", // Linting
-    "eslint-config-next": "^14.1.0" // Configuração do ESLint para Next.js
+    "typescript": "^5.3.0",
+    "@types/react": "^18.2.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0"
   }
 }
