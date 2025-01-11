@@ -1,4 +1,5 @@
-export const interpretPlanet = (planet: string, sign: string): string => {
+// app/interpretations.ts
+export const interpretPlanet = (planet: string, sign: string, position: number): string => {
   const base = {
     strength: {
       Aries: 'força, coragem, liderança',
@@ -28,6 +29,9 @@ export const interpretPlanet = (planet: string, sign: string): string => {
     }
   };
 
+  // Determinar o decanato (cada signo é dividido em três partes de 10 graus)
+  const decanato = Math.floor((position % 30) / 10) + 1;
+  
   const planetContext = base.context[planet];
   const signStrengths = base.strength[sign];
 
@@ -35,6 +39,18 @@ export const interpretPlanet = (planet: string, sign: string): string => {
     return `Interpretação não disponível para ${planet} em ${sign}.`;
   }
 
-  return `${planet} em ${sign} indica ${planetContext} marcados por ${signStrengths}. ` +
-         `Esta posição traz características de ${signStrengths} para a área de ${planetContext}.`;
+  const decanateInterpretation = (() => {
+    switch (decanato) {
+      case 1:
+        return 'Esta posição no primeiro decanato enfatiza as qualidades mais puras e diretas do signo.';
+      case 2:
+        return 'No segundo decanato, há uma expressão mais emocional e profunda destas características.';
+      case 3:
+        return 'O terceiro decanato traz uma expressão mais madura e experimentada destas qualidades.';
+    }
+  })();
+
+  return `${planet} em ${sign} a ${position.toFixed(2)}° indica ${planetContext} marcados por ${signStrengths}. ` +
+         `${decanateInterpretation} Esta posição traz características de ${signStrengths} para a área de ${planetContext}, ` +
+         `manifestando-se de forma ${position < 15 ? 'mais individual e pessoal' : 'mais coletiva e universal'}.`;
 };
