@@ -1,11 +1,12 @@
-const path = require('path');
-
+// next.config.js
 module.exports = {
   webpack: (config, { isServer }) => {
-    config.module.rules.push({
-      test: /\.node$/,
-      use: 'node-loader',
-    });
+    if (isServer) {
+      config.module.rules.push({
+        test: /\.node$/,
+        use: 'node-loader',
+      });
+    }
     return config;
   },
 };
