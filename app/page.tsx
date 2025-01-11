@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, MapPin } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Clock, Globe } from 'lucide-react';
 
 interface BirthData {
   birthDate: string;
@@ -25,8 +25,8 @@ const validateForm = (data: BirthData) => {
   const errors = [];
   if (!data.birthDate) errors.push('Data de nascimento é obrigatória');
   if (!data.birthTime) errors.push('Hora de nascimento é obrigatória');
-  if (!data.latitude) errors.push('Latitude é obrigatória');
-  if (!data.longitude) errors.push('Longitude é obrigatória');
+  if (!data.latitude || isNaN(Number(data.latitude)) || Number(data.latitude) < -90 || Number(data.latitude) > 90) errors.push('Latitude inválida');
+  if (!data.longitude || isNaN(Number(data.longitude)) || Number(data.longitude) < -180 || Number(data.longitude) > 180) errors.push('Longitude inválida');
   return errors;
 };
 
@@ -43,7 +43,6 @@ export default function Home() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string>('');
 
-  // Função para obter localização
   const getLocation = () => {
     if (!navigator.geolocation) {
       setGeoError('Geolocalização não é suportada pelo seu navegador');
@@ -86,7 +85,6 @@ export default function Home() {
     );
   };
 
-  // Tentar obter localização automaticamente ao montar o componente
   useEffect(() => {
     getLocation();
   }, []);
@@ -135,10 +133,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8 mb-8">
+    <main className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <header className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-12 mb-8 shadow-lg">
         <div className="max-w-2xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center">Mapa Astral</h1>
+          <h1 className="text-4xl font-bold text-center">Mapa Astral</h1>
           <p className="text-center mt-2 text-gray-100">
             Descubra as posições planetárias no momento do seu nascimento
           </p>
@@ -155,28 +153,36 @@ export default function Home() {
         )}
         
         <div className="grid gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Nascimento
-            </label>
-            <input
-              type="date"
-              value={formData.birthDate}
-              onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hora de Nascimento
-            </label>
-            <input
-              type="time"
-              value={formData.birthTime}
-              onChange={(e) => setFormData({...formData, birthTime: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data de Nascimento
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <Calendar className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hora de Nascimento
+              </label>
+              <div className="relative">
+                <input
+                  type="time"
+                  value={formData.birthTime}
+                  onChange={(e) => setFormData({...formData, birthTime: e.target.value})}
+                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <Clock className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
+              </div>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -189,10 +195,11 @@ export default function Home() {
                   type="number"
                   value={formData.latitude}
                   onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-                  className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Ex: -23.5505"
                   step="0.000001"
                 />
+                <Globe className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
               </div>
             </div>
             
@@ -205,15 +212,15 @@ export default function Home() {
                   type="number"
                   value={formData.longitude}
                   onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-                  className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Ex: -46.6333"
                   step="0.000001"
                 />
+                <Globe className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
               </div>
             </div>
           </div>
 
-          {/* Botão de Geolocalização */}
           <button
             onClick={getLocation}
             disabled={geoLoading}
@@ -227,7 +234,6 @@ export default function Home() {
             {geoLoading ? 'Obtendo localização...' : 'Usar localização atual'}
           </button>
 
-          {/* Mensagem de erro da geolocalização */}
           {geoError && (
             <p className="text-sm text-red-600">{geoError}</p>
           )}
