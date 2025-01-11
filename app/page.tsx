@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +18,7 @@ interface ChartData {
     sign: string;
     position: number;
     color: string;
+    interpretation?: string; // Adicionando campo para a interpretação
   }[];
 }
 
@@ -115,6 +115,17 @@ export default function Home() {
 
       const data = await response.json();
       setChartData(data);
+
+      // Gerar interpretações para cada planeta
+      const interpretedPlanets = await Promise.all(
+        data.planets.map(async (planet) => {
+          const interpretation = await interpretPlanet(planet.name, planet.sign, planet.position);
+          return { ...planet, interpretation };
+        })
+      );
+
+      // Atualizar o estado com as interpretações
+      setChartData({ planets: interpretedPlanets });
     } catch (error) {
       setErrors(['Ocorreu um erro ao calcular o mapa astral']);
     } finally {
@@ -281,7 +292,7 @@ export default function Home() {
                     {planet.sign} • {planet.position.toFixed(2)}°
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    {interpretPlanet(planet.name, planet.sign, planet.position)}
+                    {planet.interpretation}
                   </p>
                 </div>
               ))}
