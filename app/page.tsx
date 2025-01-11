@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Loader2, MapPin, Calendar, Clock, Globe } from 'lucide-react';
+import { interpretPlanet } from './interpretations'; // Importe a função de interpretação
 
 interface BirthData {
   birthDate: string;
@@ -18,7 +19,6 @@ interface ChartData {
     sign: string;
     position: number;
     color: string;
-    description: string; // Adicionando descrição interpretativa
   }[];
 }
 
@@ -281,7 +281,7 @@ export default function Home() {
                     {planet.sign} • {planet.position.toFixed(2)}°
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    {planet.description}
+                    {interpretPlanet(planet.name, planet.sign, planet.position)}
                   </p>
                 </div>
               ))}
