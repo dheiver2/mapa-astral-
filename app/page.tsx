@@ -18,6 +18,7 @@ interface ChartData {
     sign: string;
     position: number;
     color: string;
+    description: string; // Adicionando descrição interpretativa
   }[];
 }
 
@@ -278,6 +279,9 @@ export default function Home() {
                   </div>
                   <p className="text-gray-600">
                     {planet.sign} • {planet.position.toFixed(2)}°
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {planet.description}
                   </p>
                 </div>
               ))}
