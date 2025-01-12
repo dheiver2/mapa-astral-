@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Loader2, Calendar, Clock, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
+// Resto do código permanece igual...
 // Função de interpretação
 const interpretPlanet = (planet: string, sign: string, position: number): string => {
   // Normaliza o nome do planeta e signo para lidar com variações
