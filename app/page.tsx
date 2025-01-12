@@ -1,10 +1,227 @@
-// app/page.tsx
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { Loader2, Calendar, Clock, Search } from 'lucide-react';
+import { Loader2, Calendar, Clock, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
-// Lista de cidades brasileiras com suas coordenadas
+// Função de interpretação
+const interpretPlanet = (planet: string, sign: string, position: number): string => {
+  // Normaliza o nome do planeta e signo para lidar com variações
+  const normalizePlanet = (p: string): string => {
+    const normalized = p.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    
+    const mappings: { [key: string]: string } = {
+      'sol': 'Sol',
+      'sun': 'Sol',
+      'lua': 'Lua',
+      'moon': 'Lua',
+      'mercurio': 'Mercúrio',
+      'mercury': 'Mercúrio',
+      'venus': 'Vênus',
+      'marte': 'Marte',
+      'mars': 'Marte',
+      'jupiter': 'Júpiter',
+      'saturno': 'Saturno',
+      'saturn': 'Saturno'
+    };
+    
+    return mappings[normalized] || p;
+  };
+
+  const normalizeSign = (s: string): string => {
+    const normalized = s.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    
+    const mappings: { [key: string]: string } = {
+      'aries': 'Áries',
+      'taurus': 'Touro',
+      'gemini': 'Gêmeos',
+      'gemeos': 'Gêmeos',
+      'cancer': 'Câncer',
+      'leo': 'Leão',
+      'virgo': 'Virgem',
+      'libra': 'Libra',
+      'scorpio': 'Escorpião',
+      'escorpiao': 'Escorpião',
+      'sagittarius': 'Sagitário',
+      'sagitario': 'Sagitário',
+      'capricorn': 'Capricórnio',
+      'capricornio': 'Capricórnio',
+      'aquarius': 'Aquário',
+      'aquario': 'Aquário',
+      'pisces': 'Peixes'
+    };
+    
+    return mappings[normalized] || s;
+  };
+
+  const normalizedPlanet = normalizePlanet(planet);
+  const normalizedSign = normalizeSign(sign);
+
+  const planetContexts: { [key: string]: { attribute: string, theme: string } } = {
+    'Sol': {
+      attribute: 'vitalidade e propósito',
+      theme: 'essência do ser e expressão pessoal'
+    },
+    'Lua': {
+      attribute: 'emoções e instintos',
+      theme: 'mundo interior e necessidades emocionais'
+    },
+    'Mercúrio': {
+      attribute: 'comunicação e raciocínio',
+      theme: 'forma de pensar e expressar ideias'
+    },
+    'Vênus': {
+      attribute: 'amor e valores',
+      theme: 'relacionamentos e apreciação da beleza'
+    },
+    'Marte': {
+      attribute: 'ação e energia',
+      theme: 'impulso e forma de agir'
+    },
+    'Júpiter': {
+      attribute: 'expansão e sabedoria',
+      theme: 'crescimento e busca por significado'
+    },
+    'Saturno': {
+      attribute: 'estrutura e responsabilidade',
+      theme: 'limites e maturidade'
+    }
+  };
+
+  const signAttributes: { [key: string]: { quality: string, element: string, expression: string } } = {
+    'Áries': {
+      quality: 'iniciativa e coragem',
+      element: 'Fogo',
+      expression: 'dinâmica e assertiva'
+    },
+    'Touro': {
+      quality: 'estabilidade e praticidade',
+      element: 'Terra',
+      expression: 'constante e sensorial'
+    },
+    'Gêmeos': {
+      quality: 'versatilidade e adaptabilidade',
+      element: 'Ar',
+      expression: 'comunicativa e curiosa'
+    },
+    'Câncer': {
+      quality: 'sensibilidade e proteção',
+      element: 'Água',
+      expression: 'emocional e nutridora'
+    },
+    'Leão': {
+      quality: 'criatividade e autoexpressão',
+      element: 'Fogo',
+      expression: 'dramática e magnética'
+    },
+    'Virgem': {
+      quality: 'análise e aperfeiçoamento',
+      element: 'Terra',
+      expression: 'metódica e prestativa'
+    },
+    'Libra': {
+      quality: 'harmonia e equilíbrio',
+      element: 'Ar',
+      expression: 'diplomática e refinada'
+    },
+    'Escorpião': {
+      quality: 'intensidade e profundidade',
+      element: 'Água',
+      expression: 'penetrante e transformadora'
+    },
+    'Sagitário': {
+      quality: 'expansão e otimismo',
+      element: 'Fogo',
+      expression: 'aventureira e filosófica'
+    },
+    'Capricórnio': {
+      quality: 'ambição e disciplina',
+      element: 'Terra',
+      expression: 'prudente e determinada'
+    },
+    'Aquário': {
+      quality: 'inovação e originalidade',
+      element: 'Ar',
+      expression: 'progressista e humanitária'
+    },
+    'Peixes': {
+      quality: 'compaixão e transcendência',
+      element: 'Água',
+      expression: 'intuitiva e receptiva'
+    }
+  };
+
+  const planetInfo = planetContexts[normalizedPlanet];
+  const signInfo = signAttributes[normalizedSign];
+
+  if (!planetInfo || !signInfo) {
+    return `Interpretação não disponível para ${planet} em ${sign}.`;
+  }
+
+  const decanato = Math.floor((position % 30) / 10) + 1;
+
+  const decanateInterpretation = (() => {
+    const qualities = {
+      'Fogo': ['pioneiro', 'expressivo', 'inspirador'],
+      'Terra': ['prático', 'estável', 'manifestador'],
+      'Ar': ['mental', 'social', 'idealista'],
+      'Água': ['emotivo', 'intuitivo', 'transcendente']
+    };
+    
+    const quality = qualities[signInfo.element][decanato - 1];
+    return `No ${decanato}º decanato, manifesta-se de forma mais ${quality}.`;
+  })();
+
+  const positionInterpretation = position < 15 
+    ? 'expressando-se de maneira mais pessoal e direta'
+    : 'manifestando-se de forma mais social e abrangente';
+
+  return `${normalizedPlanet} em ${normalizedSign} (${position.toFixed(2)}°) indica uma expressão de ${planetInfo.attribute} que se manifesta através da ${signInfo.quality}. ` +
+         `${decanateInterpretation} Esta combinação sugere que seu ${planetInfo.theme} se desenvolve de maneira ${signInfo.expression}, ${positionInterpretation}. ` +
+         `A influência do elemento ${signInfo.element} traz uma qualidade ${signInfo.expression.toLowerCase()} para esta posição.`;
+};
+
+// Componente PlanetCard
+interface PlanetCardProps {
+  planet: Planet;
+}
+
+const PlanetCard = ({ planet }: PlanetCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const interpretation = interpretPlanet(planet.name, planet.sign, planet.position);
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl" style={{ color: planet.color }}>
+            {planet.symbol}
+          </span>
+          <h3 className="font-semibold text-gray-900">{planet.name}</h3>
+        </div>
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+      </div>
+      <p className="text-gray-600">
+        {planet.sign} • {planet.degree.toFixed(2)}°
+      </p>
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {interpretation}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Lista de cidades brasileiras
 const BRAZILIAN_CITIES = [
   { name: "São Paulo", state: "SP", latitude: -23.5505, longitude: -46.6333 },
   { name: "Rio de Janeiro", state: "RJ", latitude: -22.9068, longitude: -43.1729 },
@@ -156,7 +373,6 @@ export default function Home() {
     setErrors([]);
   };
 
-  // Fechar a lista de cidades quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -297,23 +513,7 @@ export default function Home() {
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
               {chartData.birthChart.planets.map((planet, index) => (
-                <div 
-                  key={index}
-                  className="bg-white p-4 rounded-lg shadow-sm border border-purple-100"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-2xl" style={{ color: planet.color }}>
-                      {planet.symbol}
-                    </span>
-                    <h3 className="font-semibold text-gray-900">{planet.name}</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    {planet.sign} • {planet.degree.toFixed(2)}°
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {planet.name} em {planet.sign} na posição {planet.position.toFixed(2)}°
-                  </p>
-                </div>
+                <PlanetCard key={index} planet={planet} />
               ))}
             </div>
           </div>
