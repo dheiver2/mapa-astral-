@@ -2,8 +2,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, MapPin, Calendar, Clock, Globe } from 'lucide-react';
-import { interpretPlanet } from './interpretations'; // Importe a função de interpretação
+import { Loader2, Calendar, Clock, Search } from 'lucide-react';
+
+// Lista de cidades brasileiras com suas coordenadas
+const BRAZILIAN_CITIES = [
+  { name: "São Paulo", state: "SP", latitude: -23.5505, longitude: -46.6333 },
+  { name: "Rio de Janeiro", state: "RJ", latitude: -22.9068, longitude: -43.1729 },
+  { name: "Brasília", state: "DF", latitude: -15.7975, longitude: -47.8919 },
+  { name: "Salvador", state: "BA", latitude: -12.9714, longitude: -38.5014 },
+  { name: "Fortaleza", state: "CE", latitude: -3.7172, longitude: -38.5433 },
+  { name: "Belo Horizonte", state: "MG", latitude: -19.9167, longitude: -43.9345 },
+  { name: "Manaus", state: "AM", latitude: -3.1019, longitude: -60.0250 },
+  { name: "Curitiba", state: "PR", latitude: -25.4284, longitude: -49.2733 },
+  { name: "Recife", state: "PE", latitude: -8.0476, longitude: -34.8770 },
+  { name: "Porto Alegre", state: "RS", latitude: -30.0346, longitude: -51.2177 },
+  { name: "Belém", state: "PA", latitude: -1.4558, longitude: -48.4902 },
+  { name: "Goiânia", state: "GO", latitude: -16.6869, longitude: -49.2648 },
+  { name: "Guarulhos", state: "SP", latitude: -23.4543, longitude: -46.5337 },
+  { name: "Campinas", state: "SP", latitude: -22.9099, longitude: -47.0626 },
+  { name: "São Luís", state: "MA", latitude: -2.5391, longitude: -44.2829 }
+];
 
 interface BirthData {
   birthDate: string;
@@ -12,22 +30,48 @@ interface BirthData {
   longitude: string;
 }
 
-interface ChartData {
-  planets: {
-    name: string;
-    symbol: string;
-    sign: string;
-    position: number;
-    color: string;
-  }[];
+interface Planet {
+  name: string;
+  symbol: string;
+  sign: string;
+  position: number;
+  degree: number;
+  color: string;
 }
 
-const validateForm = (data: BirthData) => {
-  const errors = [];
-  if (!data.birthDate) errors.push('Data de nascimento é obrigatória');
-  if (!data.birthTime) errors.push('Hora de nascimento é obrigatória');
-  if (!data.latitude || isNaN(Number(data.latitude)) || Number(data.latitude) < -90 || Number(data.latitude) > 90) errors.push('Latitude inválida');
-  if (!data.longitude || isNaN(Number(data.longitude)) || Number(data.longitude) < -180 || Number(data.longitude) > 180) errors.push('Longitude inválida');
+interface ChartData {
+  birthChart: {
+    timestamp: string;
+    planets: Planet[];
+  };
+}
+
+const validateForm = (data: BirthData): string[] => {
+  const errors: string[] = [];
+  const today = new Date();
+  const birthDate = new Date(data.birthDate);
+
+  if (!data.birthDate) {
+    errors.push('Data de nascimento é obrigatória');
+  } else if (birthDate > today) {
+    errors.push('Data de nascimento não pode ser futura');
+  } else if (birthDate < new Date('1900-01-01')) {
+    errors.push('Data de nascimento deve ser posterior a 01/01/1900');
+  }
+
+  if (!data.birthTime) {
+    errors.push('Hora de nascimento é obrigatória');
+  } else {
+    const [hours, minutes] = data.birthTime.split(':');
+    if (Number(hours) > 23 || Number(minutes) > 59) {
+      errors.push('Hora de nascimento inválida');
+    }
+  }
+
+  if (!data.latitude || !data.longitude) {
+    errors.push('Selecione uma cidade');
+  }
+
   return errors;
 };
 
@@ -41,54 +85,30 @@ export default function Home() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCityList, setShowCityList] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('');
 
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      setGeoError('Geolocalização não é suportada pelo seu navegador');
-      return;
-    }
+  const filteredCities = BRAZILIAN_CITIES.filter(city =>
+    `${city.name}, ${city.state}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    setGeoLoading(true);
-    setGeoError('');
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setFormData(prev => ({
-          ...prev,
-          latitude: position.coords.latitude.toFixed(6),
-          longitude: position.coords.longitude.toFixed(6)
-        }));
-        setGeoLoading(false);
-      },
-      (error) => {
-        let errorMessage = 'Erro ao obter localização';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Permissão para geolocalização negada';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Localização indisponível';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Tempo esgotado ao obter localização';
-            break;
-        }
-        setGeoError(errorMessage);
-        setGeoLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
+  const handleInputChange = (field: keyof BirthData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors([]);
   };
 
-  useEffect(() => {
-    getLocation();
-  }, []);
+  const handleCitySelect = (city: typeof BRAZILIAN_CITIES[0]) => {
+    setSelectedCity(`${city.name}, ${city.state}`);
+    setFormData(prev => ({
+      ...prev,
+      latitude: city.latitude.toString(),
+      longitude: city.longitude.toString()
+    }));
+    setSearchTerm('');
+    setShowCityList(false);
+    setErrors([]);
+  };
 
   const handleSubmit = async () => {
     const validationErrors = validateForm(formData);
@@ -109,14 +129,15 @@ export default function Home() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Erro ao calcular mapa astral');
+        throw new Error(data.error || 'Erro ao calcular mapa astral');
       }
 
-      const data = await response.json();
       setChartData(data);
     } catch (error) {
-      setErrors(['Ocorreu um erro ao calcular o mapa astral']);
+      setErrors([error instanceof Error ? error.message : 'Erro ao calcular mapa astral']);
     } finally {
       setLoading(false);
     }
@@ -129,9 +150,24 @@ export default function Home() {
       latitude: '',
       longitude: ''
     });
+    setSelectedCity('');
+    setSearchTerm('');
     setChartData(null);
     setErrors([]);
   };
+
+  // Fechar a lista de cidades quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.city-select-container')) {
+        setShowCityList(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
@@ -146,10 +182,12 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-6">
         {errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-            {errors.map((error, index) => (
-              <p key={index}>{error}</p>
-            ))}
+          <div className="bg-red-50 border border-red-200 rounded p-4">
+            <ul className="list-disc pl-4 text-red-600">
+              {errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
           </div>
         )}
         
@@ -163,7 +201,9 @@ export default function Home() {
                 <input
                   type="date"
                   value={formData.birthDate}
-                  onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                  onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split('T')[0]}
                   className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <Calendar className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
@@ -178,71 +218,61 @@ export default function Home() {
                 <input
                   type="time"
                   value={formData.birthTime}
-                  onChange={(e) => setFormData({...formData, birthTime: e.target.value})}
+                  onChange={(e) => handleInputChange('birthTime', e.target.value)}
                   className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  step="60"
                 />
                 <Clock className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
               </div>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Latitude
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Ex: -23.5505"
-                  step="0.000001"
-                />
-                <Globe className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
-              </div>
+          <div className="city-select-container relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cidade de Nascimento
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowCityList(true);
+                }}
+                onFocus={() => setShowCityList(true)}
+                placeholder={selectedCity || "Buscar cidade..."}
+                className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <Search className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Longitude
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-                  className="w-full p-2 pl-10 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Ex: -46.6333"
-                  step="0.000001"
-                />
-                <Globe className="w-5 h-5 absolute left-2 top-2.5 text-gray-400" />
-              </div>
-            </div>
-          </div>
 
-          <button
-            onClick={getLocation}
-            disabled={geoLoading}
-            className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-purple-500 text-purple-600 rounded hover:bg-purple-50 transition-colors"
-          >
-            {geoLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <MapPin className="w-5 h-5" />
+            {showCityList && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-y-auto">
+                {filteredCities.length === 0 ? (
+                  <div className="p-4 text-gray-500 text-center">
+                    Nenhuma cidade encontrada
+                  </div>
+                ) : (
+                  <ul className="py-2">
+                    {filteredCities.map((city) => (
+                      <li
+                        key={`${city.name}-${city.state}`}
+                        onClick={() => handleCitySelect(city)}
+                        className="px-4 py-2 hover:bg-purple-50 cursor-pointer flex items-center space-x-2"
+                      >
+                        <span>{city.name}, {city.state}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
-            {geoLoading ? 'Obtendo localização...' : 'Usar localização atual'}
-          </button>
-
-          {geoError && (
-            <p className="text-sm text-red-600">{geoError}</p>
-          )}
+          </div>
 
           <div className="flex gap-4">
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || errors.length > 0}
               className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2 px-4 rounded hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 flex items-center justify-center"
             >
               {loading ? (
@@ -266,7 +296,7 @@ export default function Home() {
               Posições Planetárias
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
-              {chartData.planets.map((planet, index) => (
+              {chartData.birthChart.planets.map((planet, index) => (
                 <div 
                   key={index}
                   className="bg-white p-4 rounded-lg shadow-sm border border-purple-100"
@@ -278,10 +308,10 @@ export default function Home() {
                     <h3 className="font-semibold text-gray-900">{planet.name}</h3>
                   </div>
                   <p className="text-gray-600">
-                    {planet.sign} • {planet.position.toFixed(2)}°
+                    {planet.sign} • {planet.degree.toFixed(2)}°
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    {interpretPlanet(planet.name, planet.sign, planet.position)}
+                    {planet.name} em {planet.sign} na posição {planet.position.toFixed(2)}°
                   </p>
                 </div>
               ))}
